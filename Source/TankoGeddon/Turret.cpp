@@ -39,7 +39,7 @@ ATurret::ATurret()
 	}
 
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
-	HealthComponent->OnDie.AddUObject(this, &ATurret::Destroyed);
+	HealthComponent->OnDie.AddUObject(this, &ATurret::Die);
 	HealthComponent->OnHealthChanged.AddUObject(this, &ATurret::DamageTaked);
 }
 
@@ -83,6 +83,11 @@ void ATurret::Destroyed()
 	{
 		Cannon->Destroy();
 	}
+	Destroy();
+}
+
+void ATurret::Die()
+{
 	Destroy();
 }
 

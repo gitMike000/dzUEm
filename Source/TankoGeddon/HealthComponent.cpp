@@ -3,6 +3,12 @@
 
 #include "HealthComponent.h"
 
+UHealthComponent::UHealthComponent()
+{
+	PrimaryComponentTick.bCanEverTick = false;
+	CurrentHealth = MaxHealth;
+}
+
 void UHealthComponent::TakeDamage(FDamageData DamageData)
 {
 	float takeDamageValue = DamageData.DamageValue;

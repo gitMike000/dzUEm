@@ -32,6 +32,11 @@ protected:
 	void SetupCannon();
 
 	void Destroyed();
+
+	UFUNCTION()
+		void Die();
+
+	UFUNCTION()
 	void DamageTaked(float Value);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")

@@ -47,7 +47,7 @@ protected:
 	AProjectilePool* ProjectilePool;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
-	ECannonType CannonType = ECannonType::FireProjectile;
+	ECannonType CannonType = ECannonType::FireProjectile;		
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire params")
 	float FireRate = 1.0f;

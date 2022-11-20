@@ -46,7 +46,7 @@ void ACannon::Fire()
 	}
 
 	bReadyToFire = false;
-	Shells--;
+	Shells--;	
 
 	ShotEffect->ActivateSystem();
 	ShotSound->Play();

@@ -17,6 +17,9 @@ class TANKOGEDDON_API UHealthComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:	
+
+	UHealthComponent();
+
 	FOnDie OnDie;
 	FOnHealthChanged OnHealthChanged;
 
