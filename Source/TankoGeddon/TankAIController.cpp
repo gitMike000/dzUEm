@@ -116,7 +116,7 @@ bool ATankAIController::IsPlayerSeen()
 {
 	FVector playerPos = PlayerPawn->GetActorLocation();
 	FVector eyesPos = TankPawn->GetEyesPosition();
-
+	
 	FHitResult hitResult;
 	FCollisionQueryParams params;
 	params.bTraceComplex = true;

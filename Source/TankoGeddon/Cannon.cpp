@@ -7,6 +7,7 @@
 #include "Projectile.h"
 #include "ProjectilePool.h"
 #include "Components/AudioComponent.h"
+#include "Camera/CameraShakeBase.h"
 #include "Particles/ParticleSystemComponent.h"
 
 ACannon::ACannon()
@@ -21,7 +22,7 @@ ACannon::ACannon()
 
 	ProjectileSpawnPoint = CreateDefaultSubobject<UArrowComponent>(TEXT("ProjectileSpawnPoint"));
 	ProjectileSpawnPoint->SetupAttachment(CannonMesh);
-
+	
 	ShotSound = CreateDefaultSubobject<UAudioComponent>(TEXT("ShotSound"));
 	ShotSound->SetAutoActivate(false);
 
@@ -53,7 +54,8 @@ void ACannon::Fire()
 
 	if (CameraShake)
 	{
-		GetWorld()->GetFirstPlayerController()->ClientPlayCameraShake(CameraShake);
+		GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(CameraShake);
+		//GetWorld()->GetFirstPlayerController()->ClientPlayCameraShake(CameraShake);
 	}
 
 	if (CannonType == ECannonType::FireProjectile)

@@ -77,6 +77,7 @@ protected:
 	TSubclassOf<class UCameraShakeBase> CameraShake;
 
 private:
+
 	bool bReadyToFire = false;
 
 	int32 CurrentBurts = 0;
