@@ -16,6 +16,11 @@
 
 #include "DamageTaker.h"
 
+#include "Particles/ParticleSystemComponent.h"
+
+#include "Components/AudioComponent.h"
+
+#include "Camera/CameraShakeBase.h"
 
 ACannon::ACannon()
 {
@@ -26,11 +31,26 @@ ACannon::ACannon()
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Cannon mesh"));
 	Mesh->SetupAttachment(RootComponent);
+	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	ProjectileSpawnPoint = CreateDefaultSubobject<UArrowComponent>(TEXT("Spawnpoint"));
 	ProjectileSpawnPoint->SetupAttachment(Mesh);
 
 	GameSingleton = AGameSingleton::Get();
+
+	ShootEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ShootEffect"));
+	ShootEffect->SetupAttachment(ProjectileSpawnPoint);
+	ShootEffect->SetAutoActivate(false);
+
+	AudioEffectRocket = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioEffectRocket"));
+	AudioEffectRocket->SetupAttachment(sceeneCpm);
+	AudioEffectRocket->SetAutoActivate(false);
+
+	AudioEffectLaser = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioEffectLaser"));
+	AudioEffectLaser->SetupAttachment(sceeneCpm);
+	AudioEffectLaser->SetAutoActivate(false);
+
+
 }
 
 
@@ -188,6 +208,11 @@ void ACannon::FireProjectileShut()
 
 	if (NewProjectile)
 	{
+		NewProjectile->SetActorLocation(ProjectileSpawnPoint->GetComponentLocation());
+		NewProjectile->SetActorRotation(ProjectileSpawnPoint->GetComponentRotation());
+
+		ShootEffects();
+
 		NewProjectile->OnKill.AddUObject(this, &ACannon::TakeScore);
 		NewProjectile->SetTimeLive(FireRange);
 		NewProjectile->Start();
@@ -205,6 +230,11 @@ void ACannon::FireTraceShut()
 
 	FVector start = ProjectileSpawnPoint->GetComponentLocation();
 	FVector end = ProjectileSpawnPoint->GetForwardVector() * FireRange + start;
+
+	if (AudioEffectLaser)
+	{
+		AudioEffectLaser->Play();
+	}
 
 	if (GetWorld()->LineTraceSingleByChannel(hitResult, start, end, ECollisionChannel::ECC_Visibility, traceParams))
 	{
@@ -319,11 +349,44 @@ bool ACannon::IsReadyToFire()
 	}
 		
 	return ReadyToFire  && CurrentCountAmmo > 0 && !isReloadWeapon && !isAutoShyting;
+
 }
 
 void ACannon::Reload()
 {
 	ReadyToFire = true;
+
+}
+
+void ACannon::ShootEffects()
+{
+	if (ShootEffect)
+	{
+		ShootEffect->ActivateSystem();
+	}
+
+	if (AudioEffectRocket)
+	{
+		AudioEffectRocket->Play();
+	}
+
+	if (GetOwner() && GetOwner() == GetWorld()->GetFirstPlayerController()->GetPawn())
+	{
+		if (ShootForceEffect)
+		{
+			FForceFeedbackParameters shootForceEffectParams;
+			shootForceEffectParams.bLooping = false;
+			shootForceEffectParams.Tag = "shootForceEffectParams";
+
+			GetWorld()->GetFirstPlayerController()->ClientPlayForceFeedback(ShootForceEffect, shootForceEffectParams);
+		}
+
+		if (ShootShake)
+		{
+			GetWorld()->GetFirstPlayerController()->ClientPlayCameraShake(ShootShake);
+		}
+
+	}
 }
 
 void ACannon::BeginPlay()
@@ -331,7 +394,6 @@ void ACannon::BeginPlay()
 	Super::BeginPlay();
 
 	Reload();
-
 
 }
 

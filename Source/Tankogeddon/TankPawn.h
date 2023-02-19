@@ -22,11 +22,7 @@ public:
 	void MoveBase(float Value);
 
 	void RotationBase(float Value);
-
-	void ChangeMainCannon();
-
-	virtual void ReloadAmmo() override;
-
+	
 protected:
 	virtual void BeginPlay() override;
 
@@ -36,7 +32,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	class UCameraComponent* Camera;
-
 
 	// props
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
