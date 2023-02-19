@@ -50,6 +50,8 @@ void AAmmoBox::OnMeshOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* O
 		playerPawn->SetupCannon(CannonClass, Type, Ammo);
 		//playerPawn->AddAmmo(Ammo);
 		Destroy();
+		//Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		//Mesh->SetVisibility(false);
 	}
 
 }
