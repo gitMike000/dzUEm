@@ -8,18 +8,12 @@
 #include "Engine/Engine.h"
 #include "DrawDebugHelpers.h"
 
-#include "ProjectilePool.h"
 
 #include "GameSingleton.h"
-
 #include "Engine/World.h"
-
 #include "DamageTaker.h"
-
 #include "Particles/ParticleSystemComponent.h"
-
 #include "Components/AudioComponent.h"
-
 #include "Camera/CameraShakeBase.h"
 
 ACannon::ACannon()
@@ -35,8 +29,6 @@ ACannon::ACannon()
 
 	ProjectileSpawnPoint = CreateDefaultSubobject<UArrowComponent>(TEXT("Spawnpoint"));
 	ProjectileSpawnPoint->SetupAttachment(Mesh);
-
-	GameSingleton = AGameSingleton::Get();
 
 	ShootEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ShootEffect"));
 	ShootEffect->SetupAttachment(ProjectileSpawnPoint);
@@ -75,6 +67,8 @@ void ACannon::Fire()
 			}
 
 			CurrentCountAmmo--;
+
+			ShutCount = AutoShutCount;
 
 			AutoShyting();
 		}
@@ -118,7 +112,7 @@ void ACannon::AddAmmo(int32 AmmoCount)
 
 void ACannon::AutoShyting()
 {
-	if (AutoShutCount > 0)
+	if (ShutCount > 0)
 	{
 		isAutoShyting = true;
 
@@ -134,7 +128,7 @@ void ACannon::AutoShyting()
 
 		FireProjectileShut();
 
-		AutoShutCount--;
+		ShutCount--;
 
 		// повтор
 		GetWorld()->GetTimerManager().SetTimer(AutomaticShootingTimerHandle, this, &ACannon::AutoShyting, AutoShutTme, true);
@@ -153,8 +147,8 @@ void ACannon::AutoShyting()
 			GetWorld()->GetTimerManager().ClearTimer(AutomaticShootingTimerHandle);
 		}
 
-		// возвращаем количество выстрелов
-		AutoShutCount = 3;
+		//// возвращаем количество выстрелов
+		//ShutCount = 3;
 
 		isAutoShyting = false;
 	}
@@ -175,48 +169,24 @@ ERocketType ACannon::GetRocketType()
 
 void ACannon::FireProjectileShut()
 {
-	AProjectile* NewProjectile = nullptr;
-
-	AProjectilePool* ProjectilePool = nullptr;
-
-
-	if (GameSingleton)
+	if (!ProjectilePool)
 	{
-		UWorld* World = GetWorld();
-		ProjectilePool = GameSingleton->GetProjectilePool(World);
+		SetPool();
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "DebugMessage: NO SINGLETON!!!");
-	}
-
-
-	if (ProjectilePool)
-	{
-		NewProjectile = ProjectilePool->Get(ProjectileClass, RocketType);
-
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, "DebugMessage: create from pool");
+		AProjectile* NewProjectile = ProjectilePool->Get(ProjectileClass, RocketType);
 
 		if (NewProjectile)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, "DebugMessage: create from pool OK");
+			ShootEffects();
 
-			NewProjectile->SetActorLocation(ProjectileSpawnPoint->GetComponentLocation());
-			NewProjectile->SetActorRotation(ProjectileSpawnPoint->GetComponentRotation());
+			NewProjectile->OnKill.AddUObject(this, &ACannon::TakeScore);
+
+			NewProjectile->Start(ProjectileSpawnPoint, FireRange);
 		}
 	}
 
-	if (NewProjectile)
-	{
-		NewProjectile->SetActorLocation(ProjectileSpawnPoint->GetComponentLocation());
-		NewProjectile->SetActorRotation(ProjectileSpawnPoint->GetComponentRotation());
-
-		ShootEffects();
-
-		NewProjectile->OnKill.AddUObject(this, &ACannon::TakeScore);
-		NewProjectile->SetTimeLive(FireRange);
-		NewProjectile->Start();
-	}
 }
 
 void ACannon::FireTraceShut()
@@ -238,7 +208,7 @@ void ACannon::FireTraceShut()
 
 	if (GetWorld()->LineTraceSingleByChannel(hitResult, start, end, ECollisionChannel::ECC_Visibility, traceParams))
 	{
-		DrawDebugLine(GetWorld(), start, hitResult.Location, FColor::Red, false, 50.0f, 0, 5);
+		DrawDebugLine(GetWorld(), start, hitResult.Location, FColor::Red, false, 2.0f, 0, LaserBold);
 
 		if (hitResult.GetActor())
 		{
@@ -264,7 +234,7 @@ void ACannon::FireTraceShut()
 	}
 	else
 	{
-		DrawDebugLine(GetWorld(), start, end, FColor::Yellow, false, 50.0f, 0, 5);
+		DrawDebugLine(GetWorld(), start, end, FColor::Yellow, false, 2.0f, 0, LaserBold);
 	}
 }
 
@@ -321,6 +291,7 @@ void ACannon::ReloadAmmo()
 	
 }
 
+
 bool ACannon::IsReadyToFire()
 {
 	if (CurrentCountAmmo == 0)
@@ -335,17 +306,17 @@ bool ACannon::IsReadyToFire()
 
 	if (isReloadWeapon)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, "Reload Ammo! Wait!");
+		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, "Reload Ammo! Wait!");
 	}
 
 	if (!ReadyToFire)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Cyan, "Reload Cannon! Wait!");
+		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Cyan, "Reload Cannon! Wait!");
 	}
 
 	if (isAutoShyting)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Cyan, "Auto Shuting! Wait!");
+		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Cyan, "Auto Shuting! Wait!");
 	}
 		
 	return ReadyToFire  && CurrentCountAmmo > 0 && !isReloadWeapon && !isAutoShyting;
@@ -356,6 +327,15 @@ void ACannon::Reload()
 {
 	ReadyToFire = true;
 
+}
+
+void ACannon::SetPool()
+{
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		ProjectilePool = AGameSingleton::Get()->GetProjectilePool(World);
+	}
 }
 
 void ACannon::ShootEffects()
@@ -392,6 +372,8 @@ void ACannon::ShootEffects()
 void ACannon::BeginPlay()
 {
 	Super::BeginPlay();
+
+	SetPool();
 
 	Reload();
 

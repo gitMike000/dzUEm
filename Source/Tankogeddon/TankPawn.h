@@ -22,6 +22,16 @@ public:
 	void MoveBase(float Value);
 
 	void RotationBase(float Value);
+
+	// GUI
+	UFUNCTION(BlueprintPure)
+	float GetCurrentHealth();
+
+	UFUNCTION(BlueprintPure)
+	float GetMaxHealth();
+
+	UFUNCTION(BlueprintPure)
+	float GetHealthState();
 	
 protected:
 	virtual void BeginPlay() override;

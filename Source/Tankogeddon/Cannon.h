@@ -5,6 +5,7 @@
 
 
 #include "CoreMinimal.h"
+#include "ProjectilePool.h"
 #include "GameStruct.h"
 #include "GameFramework/Actor.h"
 #include "Cannon.generated.h"
@@ -29,6 +30,7 @@ public:
 	void Fire();
 	void AddAmmo(int32 AmmoCount);
 	void ReloadAmmo();
+
 	void AutoShyting();
 
 	int32 GetAllAmmo() { return CurrentCountAmmo + CountAmmo; }
@@ -57,20 +59,23 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
 	float FireRange = 2500.0f; // дистанция стрельбы
 
+
+	// снаряд
+	UPROPERTY()
+	class AProjectile* Projectile;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire params")
+	TSubclassOf<class AProjectile> ProjectileClass;
+
 	// тип и класс снаряда
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
 	ECannonType Type = ECannonType::FireRocket; //тип пушки
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire params")
 	ERocketType RocketType = ERocketType::NonType; //тип ракет
 
-
-	// снаряд
-	UPROPERTY()
-	class AProjectile* Projectile; 
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
-	TSubclassOf<class AProjectile> ProjectileClass; 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire params/LaserBold")
+	float LaserBold = 18.0f; // толщина лазерного луча
 
 
 	// Ammo
@@ -85,7 +90,7 @@ protected:
 
 	// auto shuting
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Auto Shuting")
-	int AutoShutCount = 3; // количество снарядов
+	int32 AutoShutCount = 3; // количество снарядов
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Auto Shuting")
 	float AutoShutTme = 0.02f; // время повторного выстрела
@@ -124,7 +129,11 @@ private:
 
 	void Reload();
 
-	class AGameSingleton* GameSingleton;
+	AProjectilePool* ProjectilePool;
+
+	void SetPool();
 
 	void ShootEffects();
+
+	int32 ShutCount;
 };

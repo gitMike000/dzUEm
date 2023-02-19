@@ -19,7 +19,28 @@ ATurretPawn::ATurretPawn()
 
 	TurretMesh->SetupAttachment(BaseMesh, "ADD_Parts_Here_Socket");
 
-	UStaticMesh * turretMeshTemp = LoadObject<UStaticMesh>(this, *TurretMeshPath);
+}
+
+void ATurretPawn::BeginPlay()
+{
+	Super::BeginPlay();
+
+	PlayerPawn = GetWorld()->GetFirstPlayerController()->GetPawn();
+
+	FTimerHandle targetingTimerHandle;
+
+	GetWorld()->GetTimerManager().SetTimer(targetingTimerHandle, this, &ATurretPawn::Targeting, TargetingRate, true, TargetingRate);
+
+	FTimerHandle ChangeCannonTimerHandle;
+
+	GetWorld()->GetTimerManager().SetTimer(ChangeCannonTimerHandle, this, &ABasePawn::ChangeMainCannon, ChangeCannonTimer, true, 0);
+}
+
+void ATurretPawn::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	UStaticMesh* turretMeshTemp = LoadObject<UStaticMesh>(this, *TurretMeshPath);
 	if (turretMeshTemp)
 	{
 		TurretMesh->SetStaticMesh(turretMeshTemp);
@@ -39,29 +60,6 @@ void ATurretPawn::ReloadAmmo()
 	{
 		Cannon->ReloadAmmo();
 	}
-}
-
-void ATurretPawn::BeginPlay()
-{
-	Super::BeginPlay();
-
-	FActorSpawnParameters params;
-
-	params.Owner = this;
-
-	Cannon = GetWorld()->SpawnActor<ACannon>(CannonClass, params);
-
-	Cannon->AttachToComponent(CannonSetupPoint, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-
-	PlayerPawn = GetWorld()->GetFirstPlayerController()->GetPawn();
-
-	FTimerHandle targetingTimerHandle;
-
-	GetWorld()->GetTimerManager().SetTimer(targetingTimerHandle, this, &ATurretPawn::Targeting, TargetingRate, true, TargetingRate);
-
-	FTimerHandle ChangeCannonTimerHandle;
-
-	GetWorld()->GetTimerManager().SetTimer(ChangeCannonTimerHandle, this, &ABasePawn::ChangeMainCannon, ChangeCannonTimer, true, 0);
 }
 
 void ATurretPawn::Targeting()
@@ -109,12 +107,20 @@ bool ATurretPawn::CanFire()
 
 	FVector targetingDir = TurretMesh->GetForwardVector();
 
+	targetingDir.Z = 0;
+
 	FVector dirToPlayer = PlayerPawn->GetActorLocation() - GetActorLocation();
+	dirToPlayer.Z = 0;
 	dirToPlayer.Normalize();
 
 	float aimAngle = FMath::RadiansToDegrees(acosf(FVector::DotProduct(targetingDir, dirToPlayer))); // math
 
-	return aimAngle <= Accurency;
+	//UE_LOG(LogTemp, Warning, TEXT("TURRET AimAngle  value is: %f"), aimAngle);
+	//UE_LOG(LogTemp, Warning, TEXT("RRotation().Yaw  value is: %f"), TurretMesh->GetRelativeRotation().Pitch);
+
+	float Pitch = TurretMesh->GetRelativeRotation().Pitch;
+
+	return (aimAngle - Pitch) <= Accurency;
 }
 
 bool ATurretPawn::IsPlayerSeen()

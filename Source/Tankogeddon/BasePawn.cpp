@@ -14,16 +14,11 @@ ABasePawn::ABasePawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	//SetActorEnableCollision(true);
-	bLockLocation = true;
+	//bLockLocation = false;
 
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("RootComponent"));
 	RootComponent = BoxCollision;
 
-	//BoxCollision->SetCollisionProfileName(FName("OverlapAll"));
-	//BoxCollision->SetCollisionObjectType(ECollisionChannel::ECC_Pawn);
-	//BoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	//BoxCollision->SetGenerateOverlapEvents(true);
 
 	BoxCollision->SetCollisionProfileName(FName("BlockAll"));
 
@@ -38,7 +33,7 @@ ABasePawn::ABasePawn()
 	CannonSetupPoint = CreateDefaultSubobject<UArrowComponent>(TEXT("CannonSetupPoint"));
 	CannonSetupPoint->SetupAttachment(TurretMesh);
 
-	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Healthcomponent"));
+	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 	HealthComponent->OnDie.AddUObject(this, &ABasePawn::Die);
 	HealthComponent->OnDamaged.AddUObject(this, &ABasePawn::DamageTaked);
 }
@@ -58,21 +53,12 @@ void ABasePawn::ReloadAmmo()
 	}
 }
 
-void ABasePawn::SetupCannon(TSubclassOf<ACannon> NewRocketCannonClass, ERocketType NewRocketType, int32 NewAmmo)
+void ABasePawn::SetupCannon(TSubclassOf<ACannon> NewRocketCannonClass, int32 NewAmmo)
 {
 	if (!NewRocketCannonClass)
 	{
 		return;
 	}
-
-	//if (CannonClass)
-	//{
-	//	CannonClassSecond = CannonClass;
-	//	if (Cannon)
-	//	{
-	//		CannonRocketTypeSecond = Cannon->GetRocketType();
-	//	}
-	//}
 
 	if (CannonClass)
 	{
@@ -91,8 +77,6 @@ void ABasePawn::SetupCannon(TSubclassOf<ACannon> NewRocketCannonClass, ERocketTy
 	Cannon = GetWorld()->SpawnActor<ACannon>(CannonClass, spawnParams);
 
 	Cannon->AttachToComponent(CannonSetupPoint, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-
-	Cannon->SetRocketType(NewRocketType);
 
 	Cannon->OnKill.AddUObject(this, &ABasePawn::ScoreTaked);
 
@@ -113,7 +97,6 @@ void ABasePawn::AddAmmo(int32 AmmoCount)
 
 void ABasePawn::ChangeMainCannon()
 {
-	UE_LOG(LogTemp, Warning, TEXT("ABasePawn::ChangeMainCannon!"));
 	if (CannonClassSecond)
 	{
 		TSubclassOf<ACannon> CannonClassTemp;
@@ -123,7 +106,7 @@ void ABasePawn::ChangeMainCannon()
 		CannonClass = CannonClassSecond;
 		CannonClassSecond = CannonClassTemp;
 
-		SetupCannon(CannonClass, CannonRocketTypeSecond, Cannon->GetAllAmmo());
+		SetupCannon(CannonClass, Cannon->GetAllAmmo());
 	}
 
 }
@@ -154,6 +137,7 @@ void ABasePawn::Die(AActor* DamageMaker)
 
 	if (Cannon)
 	{
+
 		Cannon->Destroy();
 	}
 
@@ -162,7 +146,7 @@ void ABasePawn::Die(AActor* DamageMaker)
 
 void ABasePawn::DamageTaked(float DamageValue)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Pawn %s taked damage:%f Health:%f"), *GetName(), DamageValue, HealthComponent->GetHealth());
+	UE_LOG(LogTemp, Warning, TEXT("Pawn %s taked damage:%f Health:%f"), *GetName(), DamageValue, HealthComponent->GetCurrentHealth());
 }
 
 int32 ABasePawn::GetScore()

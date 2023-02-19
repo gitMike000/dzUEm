@@ -10,6 +10,7 @@
 #include "Camera/CameraComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "DrawDebugHelpers.h"
+#include "HealthComponent.h"
 
 
 ATankPawn::ATankPawn()
@@ -48,6 +49,21 @@ void ATankPawn::RotationBase(float Value)
 	rotationBaseAxisValue = Value;
 }
 
+float ATankPawn::GetCurrentHealth()
+{
+	return HealthComponent->GetCurrentHealth();
+}
+
+float ATankPawn::GetMaxHealth()
+{
+	return HealthComponent->GetMaxHealth();
+}
+
+float ATankPawn::GetHealthState()
+{
+	return HealthComponent->GetHealthState();
+}
+
 void ATankPawn::BeginPlay()
 {
 	Super::BeginPlay();
@@ -68,7 +84,7 @@ void ATankPawn::MoveAndRotationBase(float DeltaTime)
 	ChangeRotation.Yaw += rotationBaseAxisValue * RotationSpeed * DeltaTime;
 	FRotator NewRotation = FMath::Lerp(ChangeRotation, CurrentRotation, BaseRotationInterpolationKey);
 
-	SetActorLocationAndRotation(NewPosition, NewRotation, false, 0, ETeleportType::None);
+	SetActorLocationAndRotation(NewPosition, NewRotation, true, 0, ETeleportType::None);
 
 }
 

@@ -25,19 +25,24 @@ public:
 public:
 	AProjectile();
 
-	void Start();
+	virtual void Start(UArrowComponent* SpawnPoint, float Range);
 
-	// for pool
-	bool InActive() { return IsActive; }
-	void SetActive(bool Active) { IsActive = Active; }
-	//void SetType(ERocketType NewType) { Type = NewType; }
 	ERocketType GetType() { return Type; }
-	void SetTimeLive(float Range) { TimeLive = Range / MoveSpeed; }
-	void SetHomePoint(UArrowComponent* HomePoint) { ProjectileHomePoint = HomePoint; }
+
+	void SetType(ERocketType NewType) { Type = NewType; }
+
+	bool InActive() { return IsActive; }
+
+	void SetPoolPoint(UArrowComponent* NewPoolPoint) { PoolPoint = NewPoolPoint; }
+
+	void ReturnPool();
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	class UStaticMeshComponent* Mesh; // 3D-модель снаряда
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
+	class UParticleSystemComponent* TrailEffect; 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Type")
 	ERocketType Type = ERocketType::NonType; //тип пушки
@@ -49,17 +54,29 @@ protected:
 	float MoveRate = 0.005f; // — частота обновления позиции снаряда в секундах
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
-	float Damage = 1; // повреждения, которые будет наносить снаряд при попадании.
+	float Damage = 1; // повреждения, которые будет наносить снаряд при попадании
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Damage")
+	float PushImpulse = 1000; // будет воздействовать на объекты при столкновении
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Damage")
+	float PushForce = 1000; // будет воздействовать на объекты при столкновении
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
+	bool IsExplode = true; // Взрыв будет
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Damage")
+	float ExplodeRadius = 150; // будет воздействовать на объекты при столкновении
 
 	FTimerHandle MovementTimerHandle;
 
-private:
+protected:
 	//for pool
 	FTimerHandle LiveTimerHandle;
+
 	float TimeLive = 10;
-	UArrowComponent* ProjectileHomePoint; // точка, где хранятся снаряды
-protected:
-	void ReturnPool();
+
+	UArrowComponent* PoolPoint; // точка, где хранятся снаряды
 
 protected:
 	UFUNCTION() // обнаружение столкновения с другими объектами.
@@ -70,11 +87,23 @@ protected:
 	virtual void CollisionWith(class AActor* OtherActor);
 
 	UFUNCTION()
-	void Move();
+	virtual void Move();
 
-private:
+protected:
 	bool IsActive = false;
 
 	int32 Score = 0;
+
+protected:
+	void SetTimeLive(float Range) { TimeLive = Range / MoveSpeed; }
+
+	void SetActive(bool Active) { IsActive = Active; }
+
+	virtual void Explode();
+
+	virtual void BumpInto(AActor* OtherActor);
+
+private:
+	void TimeLiveOut();
 
 };
